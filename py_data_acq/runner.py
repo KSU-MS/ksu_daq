@@ -68,12 +68,18 @@ async def run(logger):
     mcap_writer = HTPBMcapWriter(path_to_mcap, list_of_msg_names, True)
     mcap_server = MCAPServer(mcap_writer=mcap_writer, path=path_to_mcap)
 
-    # Get data source
-    os.environ["D_SOURCE"] = "SERIAL"
-    match os.environ.get("D_SOURCE"):
+    # Set data source enviroment variable
+    os.environ["D_SOURCE"] = "KVASER"
+
+    # Set the receiver_task to said D_SOURCE's io_handler script
+    match os.environ.get("SOCKET_CAN"):
         case "SERIAL":
             receiver_task = asyncio.create_task(
                 serial_reciever(db, msg_pb_classes, queue1, queue2)
+            )
+        case "SOCKET_CAN":
+            receiver_task = asyncio.create_task(
+                can_receiver(db, msg_pb_classes, queue1, queue2)
             )
         case _:
             receiver_task = asyncio.create_task(
