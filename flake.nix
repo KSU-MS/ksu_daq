@@ -9,7 +9,7 @@
     mcap.url = "github:RCMast3r/py_mcap_nix";
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
-    can_pkg_flake.url = "github:KSU-MS/Nix_CAN";
+    can_pkg_flake.url = "github:KSU-MS/ksu-ms-dbc/ab6f06bab278ba33c4e428264948450f145c90f4";
     nix-proto.url = "github:notalltim/nix-proto";
   };
 
@@ -84,7 +84,7 @@
 
       devShells.x86_64-linux.default = x86_pkgs.mkShell rec {
         # Update the name to something that suites your project.
-        name = "nix-devshell";
+        name = "ksu_daq";
         packages = with x86_pkgs; [
           jq
           py_data_acq_pkg
@@ -94,8 +94,8 @@
           cmake
           can-utils
         ];
-        # Setting up the environment variables you need during
-        # development.
+
+        # Setting up the environment variables you need during development.
         shellHook = let icon = "f121";
         in ''
           path=${x86_pkgs.proto_gen_pkg}
@@ -108,9 +108,10 @@
           export PS1="$(echo -e '\u${icon}') {\[$(tput sgr0)\]\[\033[38;5;228m\]\w\[$(tput sgr0)\]\[\033[38;5;15m\]} (${name}) \\$ \[$(tput sgr0)\]"
         '';
       };
+
       devShells.x86_64-linux.ci = x86_pkgs.mkShell rec {
         # Update the name to something that suites your project.
-        name = "nix-devshell";
+        name = "ksu_daq";
         packages = with x86_pkgs; [
           # Development Tools
           py_dbc_proto_gen_pkg
@@ -118,6 +119,7 @@
           can_pkg
           protobuf
         ];
+
         shellHook =
         ''
           path=${x86_pkgs.proto_gen_pkg}
