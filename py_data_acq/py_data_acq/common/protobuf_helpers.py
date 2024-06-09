@@ -12,10 +12,12 @@ def get_msg_names_and_classes():
         attr = getattr(hytech_pb2, attr_name)
         if isinstance(attr, type) and hasattr(attr, "DESCRIPTOR"):
             message_names.append(attr.DESCRIPTOR.name)
-            message_classes[
-                attr.DESCRIPTOR.name
-            ] = google.protobuf.message_factory.GetMessageClass(
-                hytech_pb2.DESCRIPTOR.message_types_by_name.get(attr.DESCRIPTOR.name)
+            message_classes[attr.DESCRIPTOR.name] = (
+                google.protobuf.message_factory.GetMessageClass(
+                    hytech_pb2.DESCRIPTOR.message_types_by_name.get(
+                        attr.DESCRIPTOR.name
+                    )
+                )
             )
     return message_names, message_classes
 
@@ -27,13 +29,15 @@ def pack_protobuf_msg(cantools_dict: dict, msg_name: str, message_classes):
         try:
             setattr(pb_msg, key, cantools_dict[key])
         except TypeError as e:
-            print(f"Caught TypeError: {e}")
             expected_type = type(getattr(pb_msg, key))
+            # print(f"Caught TypeError: {e}")
 
             try:
                 converted_value = expected_type(cantools_dict[key])
                 setattr(pb_msg, key, converted_value)
-                print(f"Successfully set {key} to {converted_value}")
+                # print(f"Successfully set {key} to {converted_value}")
             except ValueError:
-                print(f"Unable to convert {cantools_dict[key]} to {expected_type.__name__}")
+                print(
+                    f"Unable to convert {cantools_dict[key]} to {expected_type.__name__}"
+                )
     return pb_msg
