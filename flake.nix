@@ -9,7 +9,7 @@
     mcap.url = "github:RCMast3r/py_mcap_nix";
     foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
-    can_pkg_flake.url = "github:KSU-MS/ksu-ms-dbc/vcu_parameter_message";
+    can_pkg_flake.url = "github:KSU-MS/ksu-ms-dbc/main";
     nix-proto.url = "github:notalltim/nix-proto";
   };
 
