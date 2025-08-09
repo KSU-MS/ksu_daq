@@ -24,11 +24,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1749809000,
-        "narHash": "sha256-25l5Vs868Z/VnvbBvWfe0L4QUBk3s6qn6ijOx7SCkHk=",
+        "lastModified": 1754697370,
+        "narHash": "sha256-PtYGki8DvRkGRnflIRgmX080a1IgcQ0iYnH5aBsc1CI=",
         "owner": "KSU-MS",
         "repo": "ksu-ms-dbc",
-        "rev": "64a92578f595c7f1ab86acf0f03ad2466a650623",
+        "rev": "5faba00f974053b1959e68a471b80aa99d79d7c5",
         "type": "github"
       },
       "original": {
