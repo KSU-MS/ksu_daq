@@ -32,10 +32,10 @@ def main():
             rpm_set = generate_sine_wave(3000, 1, 90, time.time()) + 3000
             rpm_data = rpm.encode(
                 {
-                    "D4_Delta_Resolver_Filtered": int(1),
-                    "D3_Electrical_Output_Frequency": int(1),
-                    "D2_Motor_Speed": rpm_set,
-                    "D1_Motor_Angle_Electrical": int(1),
+                    "INV_Delta_Resolver_Filtered": int(1),
+                    "INV_Electrical_Output_Frequency": int(1),
+                    "INV_Motor_Speed": rpm_set,
+                    "INV_Motor_Angle_Electrical": int(1),
                 }
             )
             rpm_msg = can.Message(

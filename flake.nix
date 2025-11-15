@@ -7,14 +7,13 @@
     utils.url = "github:numtide/flake-utils";
     mcap-protobuf.url = "github:RCMast3r/mcap-protobuf-support-flake";
     mcap.url = "github:RCMast3r/py_mcap_nix";
-    foxglove-websocket.url = "github:RCMast3r/py_foxglove_webserver_nix";
     asyncudp.url = "github:RCMast3r/asyncudp_nix";
     can_pkg_flake.url = "github:KSU-MS/ksu-ms-dbc/main";
     nix-proto.url = "github:notalltim/nix-proto";
   };
 
-  outputs = { self, nixpkgs, utils, mcap-protobuf, mcap, foxglove-websocket
-    , asyncudp, nix-proto, can_pkg_flake, ... }@inputs:
+  outputs = { self, nixpkgs, utils, mcap-protobuf, mcap,
+     asyncudp, nix-proto, can_pkg_flake, ... }@inputs:
     let
       makePackageSet = pkgs: {
         py_data_acq_pkg = pkgs.py_data_acq_pkg;
@@ -52,7 +51,6 @@
         mcap-protobuf.overlays.default
         mcap.overlays.default
         asyncudp.overlays.default
-        foxglove-websocket.overlays.default
       ] ++ nix-proto.lib.overlayToList nix_protos_overlays;
       system = builtins.currentSystem;
       x86_pkgs = import nixpkgs {

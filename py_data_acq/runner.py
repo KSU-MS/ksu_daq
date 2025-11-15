@@ -28,10 +28,15 @@ async def write_data_to_mcap(queue, mcap_writer):
             await mcw.write_data(queue)
 
 
+
 async def fxglv_websocket_consume_data(queue, foxglove_server):
-    async with foxglove_server as fz:
-        while True:
-            await fz.send_msgs_from_queue(queue)
+     async with foxglove_server as fz:
+         while True:
+            try:
+                await fz.send_msgs_from_queue(queue)
+            except Exception:
+                logger.exception("foxglove send loop crashed")
+                await asyncio.sleep(1)
 
 
 async def run(logger):
@@ -57,7 +62,15 @@ async def run(logger):
     # Start foxglove websocket and send message list
     list_of_msg_names, msg_pb_classes = pb_helpers.get_msg_names_and_classes()
     fx_s = HTProtobufFoxgloveServer(
-        "0.0.0.0", 8765, "asdf", fp_proto, list_of_msg_names
+        "0.0.0.0",
+        8765,
+        "asdf",
+        fp_proto,
+        list_of_msg_names,
+        # initial_parameters={
+        #     "INV_Torque_Feedback": 100,
+        # },
+        can_db=db,
     )
 
     # Set output path of mcap files, and if on nixos save to a predefined path
