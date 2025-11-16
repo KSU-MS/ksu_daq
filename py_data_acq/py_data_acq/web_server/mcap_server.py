@@ -42,27 +42,235 @@ class MCAPServer:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAN Control</title>
+    <style>
+        :root {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #0f172a;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(0deg, #ffc629 0%, rgba(0, 0, 0, 0.9) 35%, #000000 100%);
+            color: #e2e8f0;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        .page {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 2.5rem clamp(1.5rem, 4vw, 3rem) 3.5rem;
+        }
+        .hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .hero h1 {
+            margin: 0.4rem 0 0.25rem;
+            font-size: clamp(1.75rem, 4vw, 2.4rem);
+            color: #f8fafc;
+        }
+        .hero p {
+            margin: 0;
+            color: #94a3b8;
+        }
+        .eyebrow {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #60a5fa;
+        }
+        .ghost-btn {
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            background: transparent;
+            color: #e2e8f0;
+            padding: 0.65rem 1rem;
+            border-radius: 999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 160ms ease;
+        }
+        .ghost-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .card {
+            background: rgba(2, 6, 23, 0.88);
+            border: 1px solid rgba(51, 65, 85, 0.9);
+            border-radius: 18px;
+            padding: 1.75rem;
+            box-shadow: 0 25px 60px rgba(2, 6, 23, 0.45);
+            backdrop-filter: blur(10px);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #f8fafc;
+        }
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+        label {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        select,
+        input,
+        textarea {
+            width: 100%;
+            padding: 0.8rem 0.9rem;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.55);
+            color: #e2e8f0;
+            font-size: 1rem;
+        }
+        textarea {
+            min-height: 8rem;
+            resize: vertical;
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+        }
+        .primary-btn {
+            width: fit-content;
+            border: none;
+            border-radius: 12px;
+            padding: 0.85rem 1.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #0f0f0f;
+            background: linear-gradient(135deg, #ffc629, #d49b00);
+            box-shadow: 0 8px 18px rgba(255, 198, 41, 0.2);
+            transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+        .primary-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 26px rgba(255, 198, 41, 0.28);
+        }
+        .status-pill {
+            display: inline-flex;
+            padding: 0.75rem 1rem;
+            border-radius: 14px;
+            background: rgba(34, 197, 94, 0.18);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #86efac;
+            font-weight: 600;
+            min-height: 3rem;
+            align-items: center;
+        }
+        .helper-text {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+        .toast {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            min-width: 280px;
+            padding: 0.9rem 1rem;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 0 18px 45px rgba(2, 6, 23, 0.55);
+            color: #e2e8f0;
+            font-weight: 500;
+            transform: translateY(120%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 220ms ease, opacity 220ms ease;
+        }
+        .toast--visible {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .toast--success {
+            border-color: rgba(34, 197, 94, 0.5);
+            color: #bbf7d0;
+        }
+        .toast--error {
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fecaca;
+        }
+        .toast--info {
+            border-color: rgba(14, 165, 233, 0.5);
+            color: #bae6fd;
+        }
+        .toast-close {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0;
+            margin-left: auto;
+        }
+    </style>
     <script>
+        let toastTimeout;
+        function showToast(message, variant = 'info', duration = 3000) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            if (!toast || !toastMessage) {
+                return;
+            }
+            toast.classList.remove('toast--success', 'toast--error', 'toast--info', 'toast--visible');
+            toastMessage.innerText = message;
+            toast.classList.add(`toast--${variant}`, 'toast--visible');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => hideToast(), duration);
+        }
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.classList.remove('toast--visible');
+            }
+        }
         function sendCommand(command, params) {
-        let url = '/' + command;
-        if (params && params.toString().length > 0) {
-            url += '?' + params.toString();
+            let url = '/' + command;
+            if (params && params.toString().length > 0) {
+                url += '?' + params.toString();
+            }
+            fetch(url, { method: 'POST' })
+                .then(response => response.text())
+                .then(data => {
+                    showToast(data, 'success');
+                    setTimeout(updateStatus, 750);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    showToast('Error sending command: ' + command, 'error', 4500);
+                });
         }
-        fetch(url, { method: 'POST' })
-            .then(response => response.text())
-            .then(data => {
-                alert(data);
-                setTimeout(updateStatus, 1000)
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert('Error sending command: ' + command);
-            });
-        }
-        function updateSignalOverridesFromSelect() {
+        function updateSignalOverridesFromSelect(force = false) {
             const select = document.getElementById('canMessageSelect');
             const textarea = document.getElementById('canPayloadInput');
             if (!select || !textarea || select.selectedIndex < 0) {
+                return;
+            }
+            if (!force && textarea.dataset.dirty === 'true') {
                 return;
             }
             const option = select.options[select.selectedIndex];
@@ -74,6 +282,7 @@ class MCAPServer:
                 try {
                     const parsed = JSON.parse(template);
                     textarea.value = JSON.stringify(parsed, null, 2);
+                    textarea.dataset.dirty = 'false';
                 } catch (err) {
                     console.error('Failed to parse signal template', err);
                 }
@@ -100,7 +309,10 @@ class MCAPServer:
                             select.value = data.currentMessage;
                         }
                     }
-                    updateSignalOverridesFromSelect();
+                    const payloadInput = document.getElementById('canPayloadInput');
+                    if (!payloadInput || payloadInput.dataset.dirty !== 'true') {
+                        updateSignalOverridesFromSelect();
+                    }
                 });
         }
         function sendCanCommand() {
@@ -123,30 +335,80 @@ class MCAPServer:
             updateStatus();
             const select = document.getElementById('canMessageSelect');
             if (select) {
-                select.addEventListener('change', updateSignalOverridesFromSelect);
+                select.addEventListener('change', () => updateSignalOverridesFromSelect(true));
             }
-            updateSignalOverridesFromSelect();
+            const payloadInput = document.getElementById('canPayloadInput');
+            if (payloadInput) {
+                payloadInput.dataset.dirty = payloadInput.dataset.dirty || 'false';
+                payloadInput.addEventListener('input', function() {
+                    this.dataset.dirty = 'true';
+                });
+            }
+            const form = document.getElementById('canForm');
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    sendCanCommand();
+                });
+            }
+            const refreshBtn = document.getElementById('refreshStatusBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', updateStatus);
+            }
+            const toastClose = document.getElementById('toastClose');
+            if (toastClose) {
+                toastClose.addEventListener('click', hideToast);
+            }
+            updateSignalOverridesFromSelect(true);
+            setInterval(updateStatus, 8000);
         }, false);
     </script>
 </head>
 <body>
-    <h1>CAN Control Panel</h1>
-    <div>
-        <label for="canMessageSelect">CAN Message</label>
-        <select id="canMessageSelect">
-            {{can_options}}
-        </select>
+    <div class="page">
+        <header class="hero">
+            <div>
+                <h1>CAN Control Panel</h1>
+                <p>Craft CAN payloads, apply signal overrides, and send live commands.</p>
+            </div>
+            <button id="refreshStatusBtn" type="button" class="ghost-btn">Refresh</button>
+        </header>
+        <main class="content-grid">
+            <section class="card form-card">
+                <h2>Command Builder</h2>
+                <form id="canForm" class="form-grid">
+                    <div>
+                        <label for="canMessageSelect">CAN Message</label>
+                        <select id="canMessageSelect">
+                            {{can_options}}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="canValueInput">Fallback Value</label>
+                        <input id="canValueInput" type="number" step="any" placeholder="Value applied to the first signal" />
+                    </div>
+                    <div>
+                        <label for="canPayloadInput">Signal Overrides (JSON)</label>
+                        <textarea id="canPayloadInput" placeholder='{"signal_name": 42}'></textarea>
+                    </div>
+                    <div>
+                        <button id="sendCanBtn" class="primary-btn" type="submit">Send CAN Command</button>
+                    </div>
+                </form>
+            </section>
+            <section class="card status-card">
+                <h2>Live Status</h2>
+                <div id="canStatus" class="status-pill">{{can_status}}</div>
+                <div class="helper-text">
+                    <p>Status updates automatically every few seconds. Use the refresh button for an instant update or adjust message payloads on the left.</p>
+                </div>
+            </section>
+        </main>
     </div>
-    <div>
-        <label for="canValueInput">Value</label>
-        <input id="canValueInput" type="number" step="any" placeholder="Value to send" />
+    <div id="toast" class="toast toast--info">
+        <span id="toastMessage">Ready.</span>
+        <button id="toastClose" class="toast-close" type="button" aria-label="Dismiss notification">&times;</button>
     </div>
-    <div>
-        <label for="canPayloadInput">Signal Overrides (JSON)</label>
-        <textarea id="canPayloadInput" placeholder='{"signal_name": 42}' rows="4" cols="40"></textarea>
-    </div>
-    <button id="sendCanBtn" onclick="sendCanCommand()">Send CAN Command</button>
-    <div id="canStatus">{{can_status}}</div>
 </body>
 </html>"""
 
@@ -187,17 +449,6 @@ class MCAPServer:
             return False
         self.can_message_options_html = self._build_can_options()
         return True
-
-    def _default_signal_values(self, message) -> dict[str, Any]:
-        defaults: dict[str, Any] = {}
-        for signal in message.signals:
-            if signal.name in self.can_command_defaults:
-                defaults[signal.name] = self.can_command_defaults[signal.name]
-            elif signal.initial is not None:
-                defaults[signal.name] = signal.initial
-            else:
-                defaults[signal.name] = 0
-        return defaults
 
     @staticmethod
     def _get_single_query_value(query: dict[str, list[str]], key: str) -> str | None:
@@ -293,16 +544,43 @@ class MCAPServer:
         overrides: dict[str, Any] | None,
         fallback_value: float | None,
     ):
-        payload = self._default_signal_values(message)
+        payload = {}
         overrides = overrides or {}
-        for signal_name, value in overrides.items():
-            payload[signal_name] = value
-        if fallback_value is not None:
-            for signal in message.signals:
-                if signal.name not in overrides:
-                    payload[signal.name] = fallback_value
-                    break
+        fallback_consumed = False
+        for signal in message.signals:
+            if signal.name in overrides:
+                payload[signal.name] = overrides[signal.name]
+            elif fallback_value is not None and not fallback_consumed:
+                payload[signal.name] = fallback_value
+                fallback_consumed = True
+            elif signal.name in self.can_command_defaults:
+                payload[signal.name] = self.can_command_defaults[signal.name]
+            elif signal.initial is not None:
+                payload[signal.name] = signal.initial
+            else:
+                payload[signal.name] = 0
         return payload
+
+    def _default_signal_values(self, message) -> dict[str, float]:
+        """
+        Build the default signal template used in the UI dropdown.
+
+        Preference order:
+            1. Explicit can_command_defaults passed to the server.
+            2. Signal initial value defined in the DBC.
+            3. Signal minimum (if defined) or 0 as the final fallback.
+        """
+        template: dict[str, float] = {}
+        for signal in getattr(message, 'signals', []):
+            if signal.name in self.can_command_defaults:
+                template[signal.name] = float(self.can_command_defaults[signal.name])
+            elif signal.initial is not None:
+                template[signal.name] = float(signal.initial)
+            elif signal.minimum is not None:
+                template[signal.name] = float(signal.minimum)
+            else:
+                template[signal.name] = 0.0
+        return template
 
     def send_can_command(
         self,
