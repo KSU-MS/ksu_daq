@@ -4,8 +4,12 @@ pkgs.stdenv.mkDerivation rec {
   name = "ht-proto-gen";
   
   src = builtins.filterSource (path: type: false) ./.;
-  
-  buildInputs = [ py_dbc_proto_gen_pkg can_pkg protobuf ]; # Python as a build dependency
+
+  # Python as a build dependency
+  buildInputs = [ 
+    py_dbc_proto_gen_pkg 
+    can_pkg protobuf
+  ]; 
   
   # Define the build phase to execute the scripts
   buildPhase = ''

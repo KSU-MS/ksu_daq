@@ -1,5 +1,5 @@
 { lib
-, python311Packages
+, python313Packages
 , fetchurl
 , mcap_support_pkg
 , py_mcap_pkg
@@ -9,7 +9,7 @@
 }:
 
 let
-  foxglove-sdk = python311Packages.buildPythonPackage rec {
+  foxglove-sdk = python313Packages.buildPythonPackage {
     pname = "foxglove-sdk";
     version = "0.15.3";
     format = "wheel";
@@ -24,22 +24,22 @@ let
 
   };
 in
-python311Packages.buildPythonApplication {
+python313Packages.buildPythonApplication {
   pname = "py_data_acq";
   version = "1.0.1";
 
   propagatedBuildInputs = [
-    python311Packages.cantools
-    python311Packages.systemd
-    python311Packages.websockets
-    python311Packages.pprintpp
-    python311Packages.can
-    python311Packages.pyserial-asyncio
+    python313Packages.cantools
+    python313Packages.systemd
+    python313Packages.websockets
+    python313Packages.pprintpp
+    python313Packages.can
+    python313Packages.pyserial-asyncio
+    python313Packages.lz4
+    python313Packages.zstandard
+    python313Packages.protobuf
     asyncudp_pkg
-    python311Packages.lz4
-    python311Packages.zstandard
     foxglove-sdk
-    python311Packages.protobuf
     mcap_support_pkg
     py_mcap_pkg
     hytech_np_proto_py

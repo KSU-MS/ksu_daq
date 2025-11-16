@@ -1,11 +1,15 @@
-{ lib, python311Packages }:
+{ lib, python313Packages }:
 
-python311Packages.buildPythonApplication {
+python313Packages.buildPythonApplication {
   pname = "py_dbc_proto_gen";
   version = "1.0.0";
 
   
-  propagatedBuildInputs = [ python311Packages.cantools python311Packages.protobuf python311Packages.requests ];
+  propagatedBuildInputs = [ 
+    python313Packages.cantools 
+    python313Packages.protobuf 
+    python313Packages.requests 
+  ];
 
   src = ./py_dbc_proto_gen;
 }
