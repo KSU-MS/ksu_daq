@@ -30,10 +30,12 @@ async def write_data_to_mcap(queue, mcap_writer):
 
 
 async def fxglv_websocket_consume_data(queue, foxglove_server):
-     async with foxglove_server as fz:
-         while True:
+    async with foxglove_server as fz:
+        while True:
             try:
                 await fz.send_msgs_from_queue(queue)
+            except asyncio.CancelledError:
+                raise
             except Exception:
                 logger.exception("foxglove send loop crashed")
                 await asyncio.sleep(1)
@@ -67,10 +69,6 @@ async def run(logger):
         "asdf",
         fp_proto,
         list_of_msg_names,
-        # initial_parameters={
-        #     "INV_Torque_Feedback": 100,
-        # },
-        can_db=db,
     )
 
     # Set output path of mcap files, and if on nixos save to a predefined path
@@ -79,7 +77,10 @@ async def run(logger):
         logger.info("detected running on nixos")
         path_to_mcap = "/home/nixos/recordings"
     mcap_writer = HTPBMcapWriter(path_to_mcap, list_of_msg_names, True)
-    mcap_server = MCAPServer(mcap_writer=mcap_writer, path=path_to_mcap)
+    mcap_server = MCAPServer(
+        can_db=db,
+        dbc_file=fp_dbc,
+    )
 
     # Set data source enviroment variable
     os.environ["D_SOURCE"] = "KVASER"
@@ -113,3 +114,4 @@ if __name__ == "__main__":
     logger = logging.getLogger("data_writer_service")
     logger.setLevel(logging.INFO)
     asyncio.run(run(logger))
+
