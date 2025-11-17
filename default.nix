@@ -15,8 +15,8 @@ let
     format = "wheel";
 
     src = fetchurl {
-      url = "https://files.pythonhosted.org/packages/89/2c/6dc049ff39f5cc7b499cebc64821af35d592875caf57976568ddb5bd93fa/foxglove_sdk-0.15.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl";
-      sha256 = "1n7ic5dpvyg9kgy6pgzy9n0pijjw8rn1i4r5bk94jrc0ppm9fys8";
+      url = "https://files.pythonhosted.org/packages/3b/f5/76095ec60d458cbe1fc1120f6230b85d451eebc829ca13b209fa41020bc8/foxglove_sdk-0.15.3-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+      sha256 = "q6hdNPKSyn3N8rHW3Jvy1aZTHjfBAjsRAXNKX+HXrPw=";
     };
 
     doCheck = false;
