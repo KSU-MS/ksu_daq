@@ -1,8 +1,9 @@
 import asyncio
 import json
 import html
+import os
 import time
-from typing import Any
+from typing import Any, Iterable
 from urllib.parse import parse_qs, urlparse
 
 import can
@@ -20,6 +21,7 @@ class MCAPServer:
         dbc_file: str | None = None,
         can_message_name: str | None = None,
         can_message_defaults: dict[str, Any] | None = None,
+        allowed_messages: Iterable[str] | str | None = None,
     ):
         self.host = host
         self.port = port
@@ -29,6 +31,13 @@ class MCAPServer:
         self.can_db = can_db or self._load_can_database(dbc_file)
         self.can_command_message = can_message_name
         self.can_command_defaults = can_message_defaults or {}
+        env_allowed_messages = (
+            None if allowed_messages is not None else os.getenv("CAN_ALLOWED_MESSAGES")
+        )
+        raw_allowed_messages = (
+            allowed_messages if allowed_messages is not None else env_allowed_messages
+        )
+        self.allowed_message_names = self._normalize_allowed_messages(raw_allowed_messages)
         self.can_status_message = (
             f"Ready to send CAN command '{self.can_command_message}'"
             if self.can_command_message
@@ -142,6 +151,35 @@ class MCAPServer:
             color: #e2e8f0;
             font-size: 1rem;
         }
+        select option[hidden] {
+            display: none;
+        }
+        .select-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+        .filter-input-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .filter-input-row input {
+            flex: 1;
+        }
+        .ghost-btn--compact {
+            padding: 0.45rem 0.85rem;
+            font-size: 0.85rem;
+            border-radius: 10px;
+        }
+        .input-hint {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin: 0;
+        }
+        .input-hint--warning {
+            color: #fca5a5;
+        }
         textarea {
             min-height: 8rem;
             resize: vertical;
@@ -248,6 +286,70 @@ class MCAPServer:
                 toast.classList.remove('toast--visible');
             }
         }
+        function parseSignalTerms(value) {
+            if (!value) {
+                return [];
+            }
+            return value
+                .split(/[,\\n]/)
+                .map((term) => term.trim().toLowerCase())
+                .filter(Boolean);
+        }
+        function optionMatchesSearch(option, terms) {
+            if (!terms.length) {
+                return true;
+            }
+            const signalNames = (option.dataset.signalNames || '').toLowerCase();
+            const label = (option.textContent || '').toLowerCase();
+            return terms.every((term) => signalNames.includes(term) || label.includes(term));
+        }
+        function applySignalSearch(options = {}) {
+            const { preserveSelection = false } = options;
+            const select = document.getElementById('canMessageSelect');
+            const filterInput = document.getElementById('canSignalSearch');
+            const noMatchesEl = document.getElementById('canMessageNoMatches');
+            if (!select) {
+                return;
+            }
+            const initialValue = select.value;
+            const terms = parseSignalTerms(filterInput ? filterInput.value : '');
+            let firstVisibleValue = null;
+            const optionList = Array.from(select.options);
+            optionList.forEach((option) => {
+                const matches = optionMatchesSearch(option, terms);
+                option.hidden = !matches;
+                option.disabled = !matches;
+                if (matches && firstVisibleValue === null) {
+                    firstVisibleValue = option.value;
+                }
+            });
+            let selectionChanged = false;
+            if (preserveSelection) {
+                const currentOption = select.querySelector(`option[value="${select.value}"]`);
+                if (!currentOption || currentOption.hidden) {
+                    select.value = firstVisibleValue ?? '';
+                    selectionChanged = select.value !== initialValue;
+                }
+            } else {
+                select.value = firstVisibleValue ?? '';
+                selectionChanged = select.value !== initialValue;
+            }
+            if (selectionChanged) {
+                updateSignalOverridesFromSelect(true);
+            }
+            if (noMatchesEl) {
+                noMatchesEl.hidden = Boolean(firstVisibleValue);
+            }
+            return firstVisibleValue;
+        }
+        function clearSignalSearch() {
+            const filterInput = document.getElementById('canSignalSearch');
+            if (filterInput) {
+                filterInput.value = '';
+                applySignalSearch();
+                filterInput.focus();
+            }
+        }
         function sendCommand(command, params) {
             let url = '/' + command;
             if (params && params.toString().length > 0) {
@@ -299,6 +401,7 @@ class MCAPServer:
                     const select = document.getElementById('canMessageSelect');
                     if (select && data.messageOptions) {
                         const currentValue = select.value;
+                        const scrollTop = select.scrollTop;
                         select.innerHTML = data.messageOptions;
                         if (currentValue) {
                             select.value = currentValue;
@@ -308,6 +411,8 @@ class MCAPServer:
                         } else if (data.currentMessage) {
                             select.value = data.currentMessage;
                         }
+                        select.scrollTop = scrollTop;
+                        applySignalSearch({ preserveSelection: true });
                     }
                     const payloadInput = document.getElementById('canPayloadInput');
                     if (!payloadInput || payloadInput.dataset.dirty !== 'true') {
@@ -337,6 +442,20 @@ class MCAPServer:
             if (select) {
                 select.addEventListener('change', () => updateSignalOverridesFromSelect(true));
             }
+            const signalSearch = document.getElementById('canSignalSearch');
+            if (signalSearch) {
+                signalSearch.addEventListener('input', () => applySignalSearch());
+                signalSearch.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        clearSignalSearch();
+                    }
+                });
+            }
+            const clearSearchBtn = document.getElementById('clearSignalSearch');
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', clearSignalSearch);
+            }
             const payloadInput = document.getElementById('canPayloadInput');
             if (payloadInput) {
                 payloadInput.dataset.dirty = payloadInput.dataset.dirty || 'false';
@@ -359,6 +478,7 @@ class MCAPServer:
             if (toastClose) {
                 toastClose.addEventListener('click', hideToast);
             }
+            applySignalSearch({ preserveSelection: true });
             updateSignalOverridesFromSelect(true);
             setInterval(updateStatus, 8000);
         }, false);
@@ -377,11 +497,17 @@ class MCAPServer:
             <section class="card form-card">
                 <h2>Command Builder</h2>
                 <form id="canForm" class="form-grid">
-                    <div>
+                    <div class="select-wrapper">
                         <label for="canMessageSelect">CAN Message</label>
+                        <div class="filter-input-row">
+                            <input id="canSignalSearch" type="text" placeholder="Type signal names (comma-separated) to filter" autocomplete="off" />
+                            <button id="clearSignalSearch" type="button" class="ghost-btn ghost-btn--compact">Clear</button>
+                        </div>
                         <select id="canMessageSelect">
                             {{can_options}}
                         </select>
+                        <p id="canMessageNoMatches" class="input-hint input-hint--warning" hidden>No CAN messages match the current signal filter.</p>
+                        <p class="input-hint">Type a signal name or comma-separated list to narrow the dropdown. Matching messages remain selectable below.</p>
                     </div>
                     <div>
                         <label for="canValueInput">Fallback Value</label>
@@ -451,6 +577,30 @@ class MCAPServer:
         return True
 
     @staticmethod
+    def _normalize_allowed_messages(
+        raw_allowed: Iterable[str] | str | None,
+    ) -> set[str]:
+        if raw_allowed in (None, "", []):
+            return set()
+        tokens: list[str] = []
+        if isinstance(raw_allowed, str):
+            normalized = raw_allowed.replace("\n", ",").replace(";", ",")
+            tokens = [part.strip() for part in normalized.split(",")]
+        elif isinstance(raw_allowed, Iterable):
+            for entry in raw_allowed:
+                if entry is None:
+                    continue
+                tokens.append(str(entry).strip())
+        else:
+            return set()
+        return {token.lower() for token in tokens if token}
+
+    def _message_is_allowed(self, message) -> bool:
+        if not self.allowed_message_names:
+            return True
+        return message.name.lower() in self.allowed_message_names
+
+    @staticmethod
     def _get_single_query_value(query: dict[str, list[str]], key: str) -> str | None:
         values = query.get(key)
         if not values:
@@ -487,25 +637,59 @@ class MCAPServer:
 
     def _build_can_options(self) -> str:
         if not self.can_db or not self.can_db.messages:
+            self.can_status_message = "CAN database has no messages."
+            self.can_command_message = None
             return '<option value="">No CAN messages available</option>'
-        options = []
-        for message in self.can_db.messages:
-            selected = (
-                ' selected'
-                if self.can_command_message
-                and message.name == self.can_command_message
-                else ''
+
+        allowed_messages = [
+            message
+            for message in self.can_db.messages
+            if self._message_is_allowed(message)
+        ]
+
+        if not allowed_messages:
+            self.can_command_message = None
+            placeholder = (
+                "No CAN messages match the allowed message filter"
+                if self.allowed_message_names
+                else "No CAN messages available"
             )
+            self.can_status_message = (
+                "No CAN messages match the allowed message filter."
+                if self.allowed_message_names
+                else "CAN database has no messages."
+            )
+            return f'<option value="">{html.escape(placeholder)}</option>'
+
+        allowed_names = {message.name for message in allowed_messages}
+        preferred_selection = (
+            self.can_command_message
+            if self.can_command_message in allowed_names
+            else None
+        )
+        if preferred_selection is None:
+            preferred_selection = allowed_messages[0].name
+        self.can_command_message = preferred_selection
+
+        options = []
+        for message in allowed_messages:
+            selected = ' selected' if message.name == preferred_selection else ''
             label = f"{message.name} (0x{message.frame_id:X})"
             template = html.escape(
-                json.dumps(self._default_signal_values(message)), quote=True
+                json.dumps(self._default_signal_values(message)),
+                quote=True,
+            )
+            signal_names_attr = html.escape(
+                ",".join(
+                    signal.name.lower()
+                    for signal in getattr(message, 'signals', [])
+                ),
+                quote=True,
             )
             options.append(
-                f'<option value="{message.name}" data-signals="{template}"{selected}>{label}</option>'
+                f'<option value="{message.name}" data-signals="{template}" '
+                f'data-signal-names="{signal_names_attr}"{selected}>{label}</option>'
             )
-        if not self.can_command_message:
-            self.can_command_message = self.can_db.messages[0].name
-            options[0] = options[0].replace('>', ' selected>', 1)
         return "".join(options)
     
     # Creates page from inline html and updates with CAN status/options
@@ -527,16 +711,31 @@ class MCAPServer:
         target_name = preferred_name or self.can_command_message
         if target_name:
             try:
-                return self.can_db.get_message_by_name(target_name)
+                message = self.can_db.get_message_by_name(target_name)
             except KeyError:
                 self.can_status_message = (
                     f"Message '{target_name}' not found in DBC."
                 )
                 return None
-        if not self.can_db.messages:
-            self.can_status_message = "CAN database has no messages."
+            if not self._message_is_allowed(message):
+                self.can_status_message = (
+                    f"Message '{target_name}' is blocked by the current message filter."
+                )
+                return None
+            return message
+        allowed_messages = [
+            message
+            for message in self.can_db.messages
+            if self._message_is_allowed(message)
+        ]
+        if not allowed_messages:
+            self.can_status_message = (
+                "No CAN messages match the allowed message filter."
+                if self.allowed_message_names
+                else "CAN database has no messages."
+            )
             return None
-        return self.can_db.messages[0]
+        return allowed_messages[0]
 
     def _build_signal_payload(
         self,

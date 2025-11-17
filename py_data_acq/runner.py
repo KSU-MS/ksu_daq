@@ -80,6 +80,7 @@ async def run(logger):
     mcap_server = MCAPServer(
         can_db=db,
         dbc_file=fp_dbc,
+        allowed_messages=["vcu_set_parameter", "M193_Read_Write_Param_Command", "vcu_pedal_threshold_settings"]
     )
 
     # Set data source enviroment variable
