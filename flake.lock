@@ -26,11 +26,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781197333,
-        "narHash": "sha256-AoAAdZIDa7BfsboDbrNvnIq69ZB2BwOLlk+z42tOk38=",
+        "lastModified": 1781262329,
+        "narHash": "sha256-gcp+mV19OvdnUK3fbXoHvFKjIxzT7XqH2+3lVTSMklU=",
         "owner": "KSU-MS",
         "repo": "ksu-ms-dbc",
-        "rev": "34f26a4604f80046306a0307905a1623f4b4556b",
+        "rev": "9e10258c1cb95e73cf4d9ba9a1eb21a5728c2381",
         "type": "github"
       },
       "original": {
